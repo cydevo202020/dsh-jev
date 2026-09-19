@@ -12,6 +12,14 @@
     "cordis.patch.yml"
   ],
   "license": "BSD-3-Clause",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cydevo202020/dsh-jev.git"
+  },
+  "bugs": {
+    "url": "https://github.com/cydevo202020/dsh-jev/issues"
+  },
+  "homepage": "https://github.com/cydevo202020/dsh-jev#readme",
   "engines": {
     "node": "^22.19 || >=24"
   },
