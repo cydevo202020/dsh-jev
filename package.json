@@ -1,0 +1,49 @@
+{
+  "name": "@dsh-external/dsh-jev",
+  "version": "0.1.0",
+  "description": "TypeSafe Jev (System One) for DeepSeek Harness: typed semantic judgment (choice / score / noul) as a model-visible tool, as a ctx service other plugins can await, and as per-session pre-execute gates with confidence-aware escalation to a full-context LLM classifier.",
+  "private": true,
+  "type": "module",
+  "main": "./lib/index.js",
+  "types": "./lib/types/index.d.ts",
+  "files": [
+    "lib",
+    "src",
+    "cordis.patch.yml"
+  ],
+  "license": "BSD-3-Clause",
+  "engines": {
+    "node": "^22.19 || >=24"
+  },
+  "keywords": [
+    "deepseek-harness",
+    "dsh",
+    "dsh-plugin",
+    "typesafe",
+    "jev",
+    "system-one",
+    "judgment",
+    "classifier",
+    "tool-gate",
+    "computer-use"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "peerDependencies": {
+    "@deepseek-ai/dsh-tools": ">=0.0.1-rc <2",
+    "cordis": ">=4.0.0-rc <5",
+    "schemastery": "^3.18.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.13.3",
+    "typescript": "^5.9.0"
+  },
+  "scripts": {
+    "build": "bash scripts/build.sh",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "node tests/smoke.mjs && node tests/smoke-gate.mjs && node tests/smoke-cu-gate.mjs && node tests/smoke-visibility.mjs && node tests/session-isolation.mjs && node tests/smoke-routing.mjs && node tests/smoke-cache.mjs && node tests/smoke-escalate.mjs && node tests/smoke-limits.mjs && node tests/smoke-merge.mjs && node tests/composition.mjs"
+  }
+}

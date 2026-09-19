@@ -1,0 +1,3 @@
+# Keep LF in the repository and in the working tree: scripts/build.sh runs
+# under bash/WSL and fails on CRLF.
+* text=auto eol=lf

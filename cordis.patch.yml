@@ -1,0 +1,48 @@
+# dsh-jev 的装配与配置（profile bundle 路径）。
+# 运行时注入（super-injector）走的是另一个入口：~/.dsh/jev-gate/config.json 顶层浅合并，
+# 改完立即生效，不用重载；从文件里删掉某个键即退回这里（或 schema 默认值）。
+- insert:
+    - id: dsh-jev
+      name: '@dsh-external/dsh-jev'
+      config:
+        # 端点按顺序回退：官方额度耗尽/被限流/网络故障时自动换下一个。
+        # 每个端点各分一份链路预算，所以慢的主端点不会把备选饿死。
+        # 缺 key 的端点直接跳过，所以只配了 OpenRouter key 也能跑。
+        endpoints:
+          - label: typesafe
+            baseURL: https://api.typesafe.ai
+            path: /v1/systemone
+            apiKeyEnv: TYPESAFE_API_KEY
+            model: jev-latest
+          - label: openrouter
+            baseURL: https://openrouter.ai/api
+            path: /alpha/decisions
+            apiKeyEnv: OPENROUTER_API_KEY
+            # OpenRouter 的 pin 版本；想跟官方一样吃别名就改成 '~typesafe/jev-latest'（YAML 里必须带引号）。
+            model: typesafe/jev-1.13
+
+        # ── 通用工具闸门（shell / 文件 / 网络）─────────────────────────────
+        gateDefaultMode: off          # off 不判定 / shadow 只记录 / enforce 真拦。按会话热插拔。
+        gateAskThreshold: 0.5         # needs_human_approval 超过它即升级给人
+        gateDenyThreshold: 2          # 默认 2 = 永不自动拒绝
+        gateTimeoutMs: 8000           # 单次判定的链路预算；随 state 体积最多放大到 2 倍
+        gateObserveSkip: true         # 只读/自省工具直接跳过判定（省掉近一半调用）
+        gateFailClosedOnTimeout: true # 判定失败时：高风险改问人，其余才交回既有权限链
+        gateCacheTtlMs: 60000         # 同会话同工具同参数的结论复用窗口；0 关闭
+        gateApproveOnceTtlMs: 0       # 人工批准过的形状免问窗口；0 关闭（默认关）
+
+        # ── 放权：判定器拿不准时交给带完整上下文的 LLM 分类器 ──────────────
+        escalateMode: shadow          # off 不启用 / shadow 只记录 / enforce 让 LLM 接管处置
+        escalateTimeoutMs: 8000
+        escalateMaxPerSession: 40     # 单会话放权上限，防止退化成"每一步都问大模型"
+        escalateThinConfidence: 0.8   # 参数信息不足但判定器自信放行时不放权（实测省掉 80% 的无谓放权）
+
+        # ── computer-use / browser-use 专用闸门 ────────────────────────────
+        cuGateEnabled: true
+        cuGateDefaultMode: shadow
+        cuGateAskThreshold: 0.5
+        cuGateDenyThreshold: 2
+        cuGateTimeoutMs: 8000
+
+        # 判定流水：~/.dsh/jev-gate/shadow-<YYYY-MM-DD>.jsonl（每条带 path 字段说明走了哪条路）
+        # 加载期异常：~/.dsh/jev-gate/load-error.log
